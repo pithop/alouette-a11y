@@ -1,0 +1,103 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -- Models --
+
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String?         @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  organizations Organization[] // A user can have one or more orgs
+}
+
+model Organization {
+  id     String @id @default(cuid())
+  name   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  sites  Site[]
+}
+model Site {
+  id             String        @id @default(cuid())
+  url            String        @unique
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
+  scans          Scan[]
+}
+
+model Scan {
+  id         String     @id @default(cuid())
+  userEmail  String? // Add this field to store the customer's email
+  status     ScanStatus @default(PENDING)
+  resultJson Json?
+  createdAt  DateTime   @default(now())
+  site       Site       @relation(fields: [siteId], references: [id])
+  siteId     String
+}
+
+// -- Enums --
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ScanStatus {
+  PENDING
+  RUNNING
+  COMPLETED // For the free scan
+  PAID // After payment, before full scan
+  RUNNING_FULL // The full scan is in progress
+  COMPLETED_FULL // The full scan is done
+  DELIVERED // PDF has been emailed
+  FAILED
+}
+
+// --- NEXTAUTH MODELS (Add these) ---
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
