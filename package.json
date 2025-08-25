@@ -7,11 +7,12 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "worker": "tsx watch worker.ts"
+    "worker": "tsx watch worker.tsx"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
     "@prisma/client": "^6.14.0",
+    "@react-email/render": "^1.2.1",
     "@stripe/stripe-js": "^7.8.0",
     "axe-core": "^4.10.3",
     "bullmq": "^5.58.1",

@@ -2,124 +2,119 @@
 import { PrismaClient } from '@prisma/client';
 import { notFound } from 'next/navigation';
 import CheckoutButton from './CheckoutButton';
-import { AlertTriangle, CheckCircle, Target, HelpCircle } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
+import Header from '@/app/components/Header';
 
 const prisma = new PrismaClient();
 
 // Define types for our data to ensure type safety
 type AxeIssue = {
-    id: string;
-    impact: 'minor' | 'moderate' | 'serious' | 'critical' | null;
-    description: string;
-    helpUrl: string;
+  id: string;
+  impact: 'minor' | 'moderate' | 'serious' | 'critical' | null;
+  description: string;
+  helpUrl: string;
 };
 
 type ScanResult = {
-    score: number;
-    issues: AxeIssue[];
+  score: number;
+  issues: AxeIssue[];
 };
 
 // Helper to get color and icon based on impact level
-const getImpactDetails = (impact: AxeIssue['impact']) => {
-    switch (impact) {
-        case 'critical':
-            return { color: 'text-red-600', Icon: AlertTriangle, label: 'Critique' };
-        case 'serious':
-            return { color: 'text-orange-600', Icon: AlertTriangle, label: 'Sérieux' };
-        case 'moderate':
-            return { color: 'text-yellow-600', Icon: AlertTriangle, label: 'Modéré' };
-        default:
-            return { color: 'text-blue-600', Icon: HelpCircle, label: 'Mineur' };
-    }
+const getScoreDetails = (score: number) => {
+  if (score >= 80) return { color: 'text-green-600', bgColor: 'bg-green-100', label: 'Bon' };
+  if (score >= 50) return { color: 'text-orange-600', bgColor: 'bg-orange-100', label: 'Moyen' };
+  return { color: 'text-red-600', bgColor: 'bg-red-100', label: 'Faible' };
+};
+
+// French translations for common issues
+const issueTranslations: Record<string, { title: string; fix: string }> = {
+  'color-contrast': {
+    title: 'Texte insuffisamment contrasté',
+    fix: 'Augmentez le contraste entre le texte et son arrière-plan à un ratio de 4.5:1 minimum.',
+  },
+  list: {
+    title: 'Les listes ne sont pas structurées correctly',
+    fix: 'Utilisez les balises sémantiques <ul>, <ol>, et <li> pour toutes les listes.',
+  },
+  'image-alt': {
+    title: 'Image sans alternative textuelle',
+    fix: "Ajoutez un attribut 'alt' descriptif à toutes les images informatives.",
+  },
+  'link-name': {
+    title: 'Le lien n’a pas d’intitulé accessible',
+    fix: 'Assurez-vous que chaque lien <a> contient du texte ou un attribut aria-label qui décrit sa destination.',
+  },
 };
 
 export default async function ScanResultPage({ params }: { params: { id: string } }) {
-    const { id } = params;
-    const scan = await prisma.scan.findUnique({
-        where: { id },
-    });
+  const scan = await prisma.scan.findUnique({
+    where: { id: params.id },
+    include: { site: true },
+  });
 
-    if (!scan || !scan.resultJson) {
-        notFound();
-    }
+  if (!scan || !scan.resultJson) {
+    notFound();
+  }
 
-    const { score, issues = [] } = (scan.resultJson || {}) as unknown as ScanResult;
+  const { score, issues = [] } = (scan.resultJson || {}) as ScanResult;
+  const scoreDetails = getScoreDetails(score);
 
-    return (
-        <div className="min-h-screen bg-slate-50">
-            <header className="bg-white shadow-sm">
-                <div className="container mx-auto flex h-20 items-center justify-between px-4">
-                    <a href="/" className="text-2xl font-bold text-blue-600">Alouette A11Y</a>
-                </div>
-            </header>
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans">
+      <Header />
+      <main className="container mx-auto p-4 py-12 md:p-8">
+        <div className="mx-auto max-w-4xl">
+          <h1 className="mb-4 text-center text-3xl font-bold text-slate-800">
+            Résultats de votre audit express pour
+          </h1>
+          <p className="break-all text-center text-lg text-blue-700">{scan.site.url}</p>
 
-            <main className="container mx-auto p-4 py-12 md:p-8">
-                <div className="mx-auto max-w-4xl">
-                    <h1 className="mb-2 text-center text-3xl font-bold text-slate-800">
-                        Résultat de votre Audit Express
-                    </h1>
+          {/* Score Card */}
+          <div className={`mt-8 rounded-lg border ${scoreDetails.bgColor.replace('bg-', 'border-')} p-6 text-center`}>
+            <p className="text-sm font-medium uppercase tracking-wider text-slate-600">Score d'accessibilité</p>
+            <div className={`mt-2 text-7xl font-bold ${scoreDetails.color}`}>
+              {score}<span className="text-4xl">/100</span>
+            </div>
+            <p className={`mt-2 font-semibold ${scoreDetails.color}`}>{scoreDetails.label}</p>
+          </div>
 
-                    {/* Score Section */}
-                    <div className="my-8 flex flex-col items-center">
-                        <div className={`text-6xl font-bold ${score > 80 ? 'text-green-600' : score > 50 ? 'text-yellow-600' : 'text-red-600'}`}>
-                            {score} / 100
-                        </div>
-                        <p className="mt-2 text-lg text-slate-600">Score d'accessibilité estimé</p>
+          {/* Issues Section */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-semibold text-slate-700">
+              {issues.length > 0 ? `Les ${issues.length} problème(s) les plus critiques` : "Félicitations ! Aucun problème majeur détecté."}
+            </h2>
+            <div className="mt-6 space-y-4">
+              {issues.map((issue) => {
+                const translation = issueTranslations[issue.id] || { title: issue.description, fix: "Correction spécifique requise." };
+                return (
+                  <div key={issue.id} className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                    <div className="flex items-start">
+                      <ShieldAlert className="mr-4 h-8 w-8 flex-shrink-0 text-red-500" />
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-800">{translation.title}</h3>
+                        <p className="mt-2 text-sm text-slate-600"><span className="font-semibold">Impact :</span> Fort – Peut bloquer l'accès à l'information pour certains utilisateurs.</p>
+                        <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Correction :</span> {translation.fix}</p>
+                      </div>
                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
-                    {/* Issues Section */}
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-semibold text-slate-700">
-                            {issues.length > 0 ? `Principaux problèmes identifiés (${issues.length})` : 'Félicitations ! Aucun problème majeur détecté.'}
-                        </h2>
-
-                        {issues.map((issue) => {
-                            const { color, Icon, label } = getImpactDetails(issue.impact);
-                            return (
-                                <div key={issue.id} className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-                                    <h3 className="mb-2 text-xl font-semibold text-slate-800">Problème : {issue.description}</h3>
-                                    <div className="mb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-                                        <div className="flex items-center gap-2">
-                                            <Icon className={`${color} h-5 w-5`} />
-                                            <span className="font-semibold">Impact :</span>
-                                            <span className={color}>{label}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Target className="h-5 w-5 text-slate-500" />
-                                            <span className="font-semibold">Critère :</span>
-                                            <span className="text-slate-600">{issue.id}</span>
-                                        </div>
-                                    </div>
-                                    <a
-                                        href={issue.helpUrl}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="font-semibold text-blue-600 hover:underline">
-                                        Comment corriger ce problème ? ↗
-                                    </a>
-                                </div>
-                            );
-                        })}
-
-                        {issues.length === 0 && (
-                            <div className="flex flex-col items-center rounded-lg border-2 border-dashed border-green-300 bg-green-50 p-8 text-center">
-                                <CheckCircle className="h-12 w-12 text-green-500" />
-                                <p className="mt-4 text-lg text-green-800">Votre page a passé avec succès les tests automatisés pour les problèmes les plus courants. Pour une analyse complète, un audit manuel est recommandé.</p>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* CTA Section */}
-                    <div className="mt-12 rounded-lg bg-blue-600 p-8 text-center text-white">
-                        <h2 className="text-2xl font-bold">Passez à l'étape supérieure</h2>
-                        <p className="mx-auto mt-2 max-w-2xl">
-                            Obtenez une analyse complète de toutes les pages de votre site, des captures d'écran, et un rapport PDF détaillé conforme aux exigences RGAA.
-                        </p>
-                        <CheckoutButton scanId={params.id} />
-
-                    </div>
-                </div>
-            </main>
+          {/* CTA Section */}
+          <div className="mt-16 rounded-lg border-2 border-blue-600 bg-white p-8 text-center shadow-lg">
+            <h2 className="text-2xl font-bold text-slate-900">Passez à l'étape supérieure</h2>
+            <p className="mx-auto mt-2 max-w-2xl text-slate-700">
+              Obtenez le rapport complet (PDF détaillé, analyse de 5 pages, preuves de conformité RGAA) pour un plan d'action clair et professionnel.
+            </p>
+            <div className="mt-6">
+              <CheckoutButton scanId={params.id} />
+            </div>
+          </div>
         </div>
-    );
+      </main>
+    </div>
+  );
 }
