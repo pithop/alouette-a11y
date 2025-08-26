@@ -1,7 +1,6 @@
 import ScanForm from './ScanForm';
-import { ShieldCheck, BarChart, FileText, BadgeCheck, Zap } from 'lucide-react';
+import { ShieldCheck, BarChart, FileText, BadgeCheck } from 'lucide-react';
 import Header from './components/Header';
-import Link from 'next/link';
 
 export default function HomePage() {
   return (
@@ -9,9 +8,9 @@ export default function HomePage() {
       <Header />
       <main>
         {/* Hero Section */}
-        <section className="border-b border-slate-200 bg-slate-50 py-16 text-center md:py-24">
+        <section className="border-b border-slate-200 bg-slate-50 py-20 text-center md:py-28">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-6xl">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
               Votre site est-il conforme à la loi RGAA ?
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 md:text-xl">
@@ -20,36 +19,36 @@ export default function HomePage() {
             <div className="mx-auto mt-8 max-w-2xl">
               <ScanForm />
             </div>
-            <div className="mt-4 text-sm text-slate-500">
+            <p className="mt-4 text-sm text-slate-500">
               Analyse instantanée et gratuite. Aucune inscription requise.
-            </div>
+            </p>
           </div>
         </section>
 
         {/* "How it Works" Section */}
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl font-bold">Un processus simple en 3 étapes</h2>
+            <h2 className="text-3xl font-bold tracking-tight">Un processus simple en 3 étapes</h2>
             <p className="mx-auto mt-4 max-w-3xl text-lg text-slate-600">
               Passez de l'incertitude à la conformité en quelques minutes.
             </p>
-            <div className="mt-12 grid grid-cols-1 gap-8 text-left md:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white">
+            <div className="mt-16 grid grid-cols-1 gap-8 text-left md:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 p-8">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
                   <span className="text-xl font-bold">1</span>
                 </div>
                 <h3 className="mt-6 text-xl font-semibold">Lancez l'audit</h3>
                 <p className="mt-2 text-slate-600">Entrez simplement l'URL de votre site. Notre robot analyse votre page en temps réel.</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white">
+              <div className="rounded-xl border border-slate-200 p-8">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
                   <span className="text-xl font-bold">2</span>
                 </div>
                 <h3 className="mt-6 text-xl font-semibold">Obtenez votre score</h3>
                 <p className="mt-2 text-slate-600">Recevez une note sur 100 et découvrez vos non-conformités les plus critiques.</p>
               </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white">
+              <div className="rounded-xl border border-slate-200 p-8">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
                   <span className="text-xl font-bold">3</span>
                 </div>
                 <h3 className="mt-6 text-xl font-semibold">Passez à l'action</h3>

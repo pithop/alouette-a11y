@@ -1,4 +1,5 @@
-// worker.ts
+// worker.tsx (Final Corrected Version)
+import React from 'react'; // <--- ADD THIS LINE
 import { Worker } from 'bullmq';
 import { PrismaClient } from '@prisma/client';
 import { chromium } from 'playwright';
@@ -9,7 +10,6 @@ import { rgaaMap } from './src/lib/rgaa-map';
 import { AxeResults, Result as AxeResult } from 'axe-core';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ReportTemplate } from './src/app/components/ReportTemplate';
-import { render } from '@react-email/render';
 import { EmailTemplate } from './src/app/components/EmailTemplate';
 
 const prisma = new PrismaClient();
@@ -22,15 +22,15 @@ console.log('Worker is starting...');
 const worker = new Worker('scans', async (job) => {
     if (job.name === 'generate-full-report') {
         const { scanId } = job.data;
-        console.log(`Processing job for scanId: ${scanId}`);
-
+        let browser;
         try {
+            console.log(`Processing job for scanId: ${scanId}`);
             await prisma.scan.update({ where: { id: scanId }, data: { status: 'RUNNING_FULL' } });
 
             const scan = await prisma.scan.findUnique({ where: { id: scanId }, include: { site: true } });
-            if (!scan) throw new Error('Scan not found');
+            if (!scan || !scan.userEmail) throw new Error('Scan or user email not found');
 
-            const browser = await chromium.launch();
+            browser = await chromium.launch();
             const context = await browser.newContext();
             const allViolations: AxeResult[] = [];
             const visited = new Set<string>();
@@ -69,58 +69,40 @@ const worker = new Worker('scans', async (job) => {
 
             await prisma.scan.update({
                 where: { id: scanId },
-                data: {
-                    status: 'COMPLETED_FULL',
-                    resultJson: finalResult as any,
-                }
+                data: { status: 'COMPLETED_FULL', resultJson: finalResult as any }
             });
 
             const pageForPdf = await context.newPage();
-            const reportHtml = renderToStaticMarkup(
-              <ReportTemplate siteUrl={scan.site.url} results={finalResult} />
-            );
+            const reportHtml = renderToStaticMarkup(<ReportTemplate siteUrl={scan.site.url} results={finalResult} />);
             await pageForPdf.setContent(reportHtml, { waitUntil: 'networkidle' });
-            const pdfBuffer = await pageForPdf.pdf({ 
-                format: 'A4', 
-                printBackground: true,
-                margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }
-            });
+            const pdfBuffer = await pageForPdf.pdf({ format: 'A4', printBackground: true, margin: { top: '20px', right: '20px', bottom: '20px', left: '20px' }});
 
             const score = Math.max(0, 100 - finalResult.violations.length * 5);
-            const emailHtml = render(
-              <EmailTemplate 
-                siteUrl={scan.site.url} 
-                score={score}
-                totalViolations={finalResult.totalViolations}
-                scanId={scanId}
-              />
-            );
             
             const { data, error } = await resend.emails.send({
               from: 'Alouette A11Y <onboarding@resend.dev>',
-              to: scan.userEmail!,
+              to: scan.userEmail,
               subject: `Votre rapport d'audit RGAA pour ${scan.site.url} est prêt !`,
-              html: emailHtml,
-              attachments: [{
-                filename: 'rapport-accessibilite.pdf',
-                content: pdfBuffer,
-              }],
+              react: <EmailTemplate 
+                        siteUrl={scan.site.url} 
+                        score={score}
+                        totalViolations={finalResult.totalViolations}
+                     />,
+              attachments: [{ filename: 'rapport-accessibilite.pdf', content: pdfBuffer }],
             });
 
             if (error) { throw error; }
 
             await prisma.scan.update({ where: { id: scanId }, data: { status: 'DELIVERED' } });
-            await browser.close();
-
             console.log(`Successfully processed and delivered report for scanId: ${scanId}`);
+
         } catch (error: any) {
             console.error('--- DETAILED JOB FAILURE ---');
             console.error(error); 
             console.error('--------------------------');
-            await prisma.scan.update({ 
-                where: { id: scanId }, 
-                data: { status: 'FAILED' } 
-            });
+            await prisma.scan.update({ where: { id: scanId }, data: { status: 'FAILED' } });
+        } finally {
+            if (browser) await browser.close();
         }
     }
 }, { connection });

@@ -34,7 +34,7 @@ const issueTranslations: Record<string, { title: string; fix: string }> = {
     fix: 'Augmentez le contraste entre le texte et son arrière-plan à un ratio de 4.5:1 minimum.',
   },
   list: {
-    title: 'Les listes ne sont pas structurées correctly',
+    title: 'Les listes ne sont pas structurées correctement',
     fix: 'Utilisez les balises sémantiques <ul>, <ol>, et <li> pour toutes les listes.',
   },
   'image-alt': {
@@ -57,7 +57,7 @@ export default async function ScanResultPage({ params }: { params: { id: string 
     notFound();
   }
 
-  const { score, issues = [] } = (scan.resultJson || {}) as ScanResult;
+  const { score, issues = [] } = (scan.resultJson || {}) as unknown as ScanResult;
   const scoreDetails = getScoreDetails(score);
 
   return (
@@ -90,8 +90,10 @@ export default async function ScanResultPage({ params }: { params: { id: string 
                 return (
                   <div key={issue.id} className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex items-start">
-                      <ShieldAlert className="mr-4 h-8 w-8 flex-shrink-0 text-red-500" />
-                      <div>
+                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-red-100">
+                          <ShieldAlert className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div className="ml-4">
                         <h3 className="text-lg font-semibold text-slate-800">{translation.title}</h3>
                         <p className="mt-2 text-sm text-slate-600"><span className="font-semibold">Impact :</span> Fort – Peut bloquer l'accès à l'information pour certains utilisateurs.</p>
                         <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Correction :</span> {translation.fix}</p>

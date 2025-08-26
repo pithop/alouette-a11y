@@ -5,7 +5,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route'; // Import authOptions
+import { authOptions } from '../auth/[...nextauth]/route';
 
 const prisma = new PrismaClient();
 
@@ -17,7 +17,6 @@ type AxeIssue = {
 };
 
 export async function POST(request: Request) {
-  // 1. Get the current user session
   const session = await getServerSession(authOptions);
   const { url } = await request.json();
 
@@ -31,7 +30,6 @@ export async function POST(request: Request) {
   try {
     let organizationId: string | undefined = undefined;
 
-    // 2. If the user is logged in, find their organization
     if (session?.user?.id) {
       const org = await prisma.organization.findFirst({
         where: { userId: session.user.id },
@@ -41,11 +39,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Create or update the Site, now with the organizationId if it exists
     const site = await prisma.site.upsert({
       where: { url },
       update: {
-        // If an anonymous site exists, associate it with the org
         organizationId: organizationId,
       },
       create: {
@@ -54,7 +50,6 @@ export async function POST(request: Request) {
       },
     });
 
-    // The rest of the logic remains the same...
     const scan = await prisma.scan.create({
       data: {
         siteId: site.id,
@@ -62,7 +57,12 @@ export async function POST(request: Request) {
       },
     });
 
-    await page.goto(url, { waitUntil: 'networkidle' });
+    // --- FIX IS APPLIED HERE ---
+    await page.goto(url, { 
+      waitUntil: 'networkidle',
+      timeout: 100000 // Increase timeout to 60 seconds
+    });
+    // -------------------------
 
     const axeCorePath = path.resolve('./node_modules/axe-core/axe.min.js');
     const axeCoreScript = await fs.readFile(axeCorePath, 'utf-8');
