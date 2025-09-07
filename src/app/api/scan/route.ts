@@ -1,17 +1,18 @@
-// src/app/api/scan/route.ts (Corrected)
+// src/app/api/scan/route.ts
 import { NextResponse } from 'next/server';
 import { chromium } from 'playwright';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
+import type { AxeResults, Result as AxeResult } from 'axe-core';
 
 const prisma = new PrismaClient();
 
 type AxeIssue = {
   id: string;
-  impact: 'minor' | 'moderate' | 'serious' | 'critical' | null;
+  impact: AxeResult['impact'];
   description: string;
   helpUrl: string;
   html: string;
@@ -19,7 +20,9 @@ type AxeIssue = {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  const { url } = await request.json();
+  // FIX: Type the request body
+  const body: { url?: string } = await request.json();
+  const { url } = body;
 
   if (!url || !url.startsWith('http')) {
     return NextResponse.json({ error: 'URL valide requise.' }, { status: 400 });
@@ -57,21 +60,21 @@ export async function POST(request: Request) {
         status: 'RUNNING',
       },
     });
-
-    // --- FIX IS APPLIED HERE ---
+    
     await page.goto(url, { 
       waitUntil: 'networkidle',
-      timeout: 100000 // Increase timeout to 60 seconds
+      timeout: 100000 
     });
-    // -------------------------
 
     const axeCorePath = path.resolve('./node_modules/axe-core/axe.min.js');
     const axeCoreScript = await fs.readFile(axeCorePath, 'utf-8');
     await page.evaluate(axeCoreScript);
-
-    const results = await page.evaluate(() => {
-      // @ts-ignore
-      return (window as any).axe.run(document, {
+    
+    // FIX: Type the evaluated results
+    const results: AxeResults = await page.evaluate(() => {
+      // FIX: Use @ts-expect-error instead of @ts-ignore
+      // @ts-expect-error - axe is injected globally
+      return window.axe.run(document, {
         runOnly: {
           type: 'tag',
           values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
@@ -79,10 +82,11 @@ export async function POST(request: Request) {
       });
     });
 
-    const violations = (results as any).violations;
+    const violations = results.violations;
     const score = Math.max(0, 100 - violations.length * 5);
-
-    const issues: AxeIssue[] = violations.slice(0, 3).map((violation: any) => ({
+    
+    // FIX: Type the violation in the map function
+    const issues: AxeIssue[] = violations.slice(0, 3).map((violation: AxeResult) => ({
       id: violation.id,
       impact: violation.impact,
       description: violation.description,
@@ -94,9 +98,10 @@ export async function POST(request: Request) {
 
     const updatedScan = await prisma.scan.update({
       where: { id: scan.id },
+      // FIX: Cast to Prisma.JsonValue to avoid 'any'
       data: {
         status: 'COMPLETED',
-        resultJson: resultJson as any,
+        resultJson: resultJson as Prisma.JsonValue,
       },
     });
 

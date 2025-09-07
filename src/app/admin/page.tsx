@@ -11,7 +11,8 @@ export default async function AdminPage() {
   
     return (
         <div className="container mx-auto p-8">
-            <h1 className="text-3xl font-bold">Panneau d'administration</h1>
+            {/* FIX: Escaped apostrophe */}
+            <h1 className="text-3xl font-bold">Panneau d&apos;administration</h1>
             <div className="mt-8 grid grid-cols-3 gap-4">
                 <div className="rounded-lg bg-white p-4 border text-center">
                     <p className="text-4xl font-bold">{totalUsers}</p>

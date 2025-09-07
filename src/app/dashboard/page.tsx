@@ -6,15 +6,22 @@ import Header from '@/app/components/Header';
 import AddSiteModal from './AddSiteModal';
 import { useSession } from 'next-auth/react';
 import { redirect } from 'next/navigation';
+import { Scan, Site } from '@prisma/client';
 
-type SiteWithScans = {
-    id: string;
-    url: string;
-    scans: { id: string; createdAt: Date; status: string; resultJson: any }[];
+// FIX: Create a proper type for the fetched data
+type SiteWithScans = Site & {
+    scans: Scan[];
 };
 
+type DashboardData = {
+    name: string;
+    sites: SiteWithScans[];
+};
+
+
 export default function DashboardPage() {
-  const { data: session, status } = useSession();
+  // FIX: Removed unused 'session' variable
+  const { status } = useSession();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sites, setSites] = useState<SiteWithScans[]>([]);
   const [orgName, setOrgName] = useState('');
@@ -22,9 +29,12 @@ export default function DashboardPage() {
   useEffect(() => {
     if (status === 'unauthenticated') redirect('/api/auth/signin');
     if (status === 'authenticated') {
-      fetch('/api/dashboard-data').then(res => res.json()).then(data => {
-        setOrgName(data.name);
-        setSites(data.sites);
+      fetch('/api/dashboard-data')
+        .then(res => res.json())
+        // FIX: Type the incoming data
+        .then((data: DashboardData) => {
+            setOrgName(data.name);
+            setSites(data.sites);
       });
     }
   }, [status]);
@@ -38,7 +48,6 @@ export default function DashboardPage() {
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Tableau de bord</h1>
-            {/* FIX: Changed text color for better contrast */}
             <p className="text-lg text-slate-700">{orgName}</p>
           </div>
           <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-blue-700">
@@ -48,10 +57,12 @@ export default function DashboardPage() {
         </div>
         
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-slate-800">Rapports d'audit par site</h2>
+          {/* FIX: Escaped apostrophe */}
+          <h2 className="text-2xl font-semibold text-slate-800">Rapports d&apos;audit par site</h2>
           {sites.length === 0 ? (
             <div className="mt-4 rounded-lg border-2 border-dashed bg-white p-12 text-center">
-              <p className="text-slate-600">Vous n'avez pas encore de site. Cliquez sur "Ajouter un site" pour commencer le suivi.</p>
+              {/* FIX: Escaped apostrophes and quotes */}
+              <p className="text-slate-600">Vous n&apos;avez pas encore de site. Cliquez sur &quot;Ajouter un site&quot; pour commencer le suivi.</p>
             </div>
           ) : (
             <div className="mt-4 space-y-6">

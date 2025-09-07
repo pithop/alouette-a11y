@@ -33,8 +33,12 @@ export default function ScanForm() {
             // Redirect to the results page
             router.push(`/scan/${data.scanId}`);
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) { // FIX: Type error properly
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError('Une erreur inconnue est survenue.');
+            }
             setIsLoading(false);
         }
     };
@@ -55,7 +59,6 @@ export default function ScanForm() {
                 <button
                     type="submit"
                     disabled={isLoading}
-                    // Changed background to green and adjusted hover/focus colors
                     className="flex items-center justify-center rounded-md bg-green-600 px-8 py-4 text-lg font-semibold text-white shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-green-400"
                 >
                     {isLoading ? (

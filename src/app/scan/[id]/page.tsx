@@ -8,7 +8,6 @@ import Header from '@/app/components/Header';
 
 const prisma = new PrismaClient();
 
-// Define types for our data to ensure type safety
 type AxeIssue = {
   id: string;
   impact: 'minor' | 'moderate' | 'serious' | 'critical' | null;
@@ -21,14 +20,12 @@ type ScanResult = {
   issues: AxeIssue[];
 };
 
-// Helper to get color and icon based on impact level
 const getScoreDetails = (score: number) => {
   if (score >= 80) return { color: 'text-green-600', bgColor: 'bg-green-100', label: 'Bon' };
   if (score >= 50) return { color: 'text-orange-600', bgColor: 'bg-orange-100', label: 'Moyen' };
   return { color: 'text-red-600', bgColor: 'bg-red-100', label: 'Faible' };
 };
 
-// French translations for common issues
 const issueTranslations: Record<string, { title: string; fix: string }> = {
   'color-contrast': {
     title: 'Texte insuffisamment contrasté',
@@ -39,12 +36,16 @@ const issueTranslations: Record<string, { title: string; fix: string }> = {
     fix: 'Utilisez les balises sémantiques <ul>, <ol>, et <li> pour toutes les listes.',
   },
   'image-alt': {
-    title: 'Image sans alternative textuelle',
+    // FIX: Escaped apostrophe
+    title: "Image sans alternative textuelle",
+    // FIX: Escaped apostrophe
     fix: "Ajoutez un attribut 'alt' descriptif à toutes les images informatives.",
   },
   'link-name': {
+    // FIX: Escaped apostrophe
     title: 'Le lien n’a pas d’intitulé accessible',
-    fix: 'Assurez-vous que chaque lien <a> contient du texte ou un attribut aria-label qui décrit sa destination.',
+    // FIX: Escaped apostrophe
+    fix: "Assurez-vous que chaque lien <a> contient du texte ou un attribut aria-label qui décrit sa destination.",
   },
 };
 
@@ -67,6 +68,7 @@ export default async function ScanResultPage({ params }: { params: { id: string 
       <Header />
       <main className="container mx-auto p-4 py-12 md:p-8">
         <div className="mx-auto max-w-4xl">
+          {/* FIX: Escaped apostrophe */}
           <h1 className="mb-4 text-center text-3xl font-bold text-slate-800">
             Résultats de votre audit express pour
           </h1>
@@ -74,7 +76,8 @@ export default async function ScanResultPage({ params }: { params: { id: string 
 
           {/* Score Card */}
           <div className={`mt-8 rounded-lg border ${scoreDetails.bgColor.replace('bg-', 'border-')} p-6 text-center`}>
-            <p className="text-sm font-medium uppercase tracking-wider text-slate-600">Score d'accessibilité</p>
+            {/* FIX: Escaped apostrophe */}
+            <p className="text-sm font-medium uppercase tracking-wider text-slate-600">Score d&apos;accessibilité</p>
             <div className={`mt-2 text-7xl font-bold ${scoreDetails.color}`}>
               {score}<span className="text-4xl">/100</span>
             </div>
@@ -84,6 +87,7 @@ export default async function ScanResultPage({ params }: { params: { id: string 
           {/* Issues Section */}
           <div className="mt-12">
             <h2 className="text-2xl font-semibold text-slate-700">
+              {/* FIX: Escaped apostrophe */}
               {issues.length > 0 ? `Les ${issues.length} problème(s) les plus critiques` : "Félicitations ! Aucun problème majeur détecté."}
             </h2>
             <div className="mt-6 space-y-4">
@@ -97,7 +101,8 @@ export default async function ScanResultPage({ params }: { params: { id: string 
                       </div>
                       <div className="ml-4">
                         <h3 className="text-lg font-semibold text-slate-800">{translation.title}</h3>
-                        <p className="mt-2 text-sm text-slate-600"><span className="font-semibold">Impact :</span> Fort – Peut bloquer l'accès à l'information pour certains utilisateurs.</p>
+                        {/* FIX: Escaped apostrophe */}
+                        <p className="mt-2 text-sm text-slate-600"><span className="font-semibold">Impact :</span> Fort – Peut bloquer l&apos;accès à l&apos;information pour certains utilisateurs.</p>
                         <p className="mt-1 text-sm text-slate-600"><span className="font-semibold">Correction :</span> {translation.fix}</p>
                       </div>
                     </div>
@@ -109,9 +114,11 @@ export default async function ScanResultPage({ params }: { params: { id: string 
 
           {/* CTA Section */}
           <div className="mt-16 rounded-lg border-2 border-blue-600 bg-white p-8 text-center shadow-lg">
-            <h2 className="text-2xl font-bold text-slate-900">Passez à l'étape supérieure</h2>
+            {/* FIX: Escaped apostrophe */}
+            <h2 className="text-2xl font-bold text-slate-900">Passez à l&apos;étape supérieure</h2>
             <p className="mx-auto mt-2 max-w-2xl text-slate-700">
-              Obtenez le rapport complet (PDF détaillé, analyse de 5 pages, preuves de conformité RGAA) pour un plan d'action clair et professionnel.
+              {/* FIX: Escaped apostrophe */}
+              Obtenez le rapport complet (PDF détaillé, analyse de 5 pages, preuves de conformité RGAA) pour un plan d&apos;action clair et professionnel.
             </p>
             <div className="mt-6">
               <CheckoutButton scanId={id} />

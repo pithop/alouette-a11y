@@ -17,6 +17,7 @@ export default function SignInPage() {
           <div className="text-center">
             <h1 className="text-3xl font-bold tracking-tight">Connexion</h1>
             <p className="mt-2 text-slate-600">
+              {/* FIX: Escaped apostrophe */}
               Accédez à votre tableau de bord
             </p>
           </div>
@@ -45,6 +46,7 @@ export default function SignInPage() {
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
               <div>
+                {/* FIX: Escaped apostrophe */}
                 <label htmlFor="email" className="block text-sm font-medium text-slate-700">Adresse e-mail</label>
                 <input
                   id="email"
@@ -70,7 +72,8 @@ export default function SignInPage() {
           <Link href="/" className="text-3xl font-bold text-blue-700">
             Alouette A11Y
           </Link>
-          <p className="mt-2 text-slate-600">L'audit d'accessibilité RGAA, simplifié.</p>
+          {/* FIX: Escaped apostrophes */}
+          <p className="mt-2 text-slate-600">L&apos;audit d&apos;accessibilité RGAA, simplifié.</p>
         </div>
       </div>
     </div>

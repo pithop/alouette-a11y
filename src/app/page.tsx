@@ -1,5 +1,7 @@
+// src/app/page.tsx
+// FIX: Removed unused imports
 import ScanForm from './ScanForm';
-import { ShieldCheck, BarChart, FileText, BadgeCheck } from 'lucide-react';
+import { FileText, BadgeCheck } from 'lucide-react';
 import Header from './components/Header';
 
 export default function HomePage() {
@@ -10,11 +12,13 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="border-b border-slate-200 bg-slate-50 py-20 text-center md:py-28">
           <div className="container mx-auto px-4">
+            {/* FIX: Escaped apostrophe */}
             <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl md:text-6xl">
               Votre site est-il conforme à la loi RGAA ?
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600 md:text-xl">
-              Lancez un audit d'accessibilité en quelques secondes et recevez un rapport express pour vous mettre en conformité avant l'échéance de 2025.
+              {/* FIX: Escaped apostrophe */}
+              Lancez un audit d&apos;accessibilité en quelques secondes et recevez un rapport express pour vous mettre en conformité avant l&apos;échéance de 2025.
             </p>
             <div className="mx-auto mt-8 max-w-2xl">
               <ScanForm />
@@ -28,17 +32,20 @@ export default function HomePage() {
         {/* "How it Works" Section */}
         <section className="py-16 md:py-24">
           <div className="container mx-auto px-4 text-center">
+            {/* FIX: Escaped apostrophe */}
             <h2 className="text-3xl font-bold tracking-tight">Un processus simple en 3 étapes</h2>
             <p className="mx-auto mt-4 max-w-3xl text-lg text-slate-600">
-              Passez de l'incertitude à la conformité en quelques minutes.
+              {/* FIX: Escaped apostrophe */}
+              Passez de l&apos;incertitude à la conformité en quelques minutes.
             </p>
             <div className="mt-16 grid grid-cols-1 gap-8 text-left md:grid-cols-3">
               <div className="rounded-xl border border-slate-200 p-8">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
                   <span className="text-xl font-bold">1</span>
                 </div>
-                <h3 className="mt-6 text-xl font-semibold">Lancez l'audit</h3>
-                <p className="mt-2 text-slate-600">Entrez simplement l'URL de votre site. Notre robot analyse votre page en temps réel.</p>
+                {/* FIX: Escaped apostrophe */}
+                <h3 className="mt-6 text-xl font-semibold">Lancez l&apos;audit</h3>
+                <p className="mt-2 text-slate-600">Entrez simplement l&apos;URL de votre site. Notre robot analyse votre page en temps réel.</p>
               </div>
               <div className="rounded-xl border border-slate-200 p-8">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
@@ -51,8 +58,9 @@ export default function HomePage() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg">
                   <span className="text-xl font-bold">3</span>
                 </div>
-                <h3 className="mt-6 text-xl font-semibold">Passez à l'action</h3>
-                <p className="mt-2 text-slate-600">Téléchargez le rapport PDF complet pour un plan d'action détaillé et des preuves de conformité.</p>
+                 {/* FIX: Escaped apostrophe */}
+                <h3 className="mt-6 text-xl font-semibold">Passez à l&apos;action</h3>
+                <p className="mt-2 text-slate-600">Téléchargez le rapport PDF complet pour un plan d&apos;action détaillé et des preuves de conformité.</p>
               </div>
             </div>
           </div>
@@ -62,26 +70,29 @@ export default function HomePage() {
         <section className="border-t border-slate-200 bg-white py-16 md:py-24">
           <div className="container mx-auto grid grid-cols-1 gap-12 px-4 md:grid-cols-2 md:items-center">
             <div className="rounded-lg bg-slate-100 p-8">
-              {/* Placeholder for an image or graphic */}
               <FileText className="mx-auto h-32 w-32 text-slate-300" />
             </div>
             <div>
-              <h3 className="text-3xl font-bold">Plus qu'une simple conformité.</h3>
+              <h3 className="text-3xl font-bold">Plus qu&apos;une simple conformité.</h3>
               <p className="mt-4 text-lg text-slate-600">
-                Rendre votre site accessible, c'est aussi une opportunité pour votre organisation.
+                {/* FIX: Escaped apostrophe */}
+                Rendre votre site accessible, c&apos;est aussi une opportunité pour votre organisation.
               </p>
               <ul className="mt-6 space-y-4 text-lg text-slate-700">
                 <li className="flex items-start">
                   <BadgeCheck className="mr-3 mt-1 h-6 w-6 flex-shrink-0 text-green-600" />
-                  <span><strong>Évitez les sanctions :</strong> Protégez-vous contre des amendes pouvant aller jusqu'à 75 000 €.</span>
+                  {/* FIX: Escaped apostrophe */}
+                  <span><strong>Évitez les sanctions :</strong> Protégez-vous contre des amendes pouvant aller jusqu&apos;à 75 000 €.</span>
                 </li>
                 <li className="flex items-start">
                   <BadgeCheck className="mr-3 mt-1 h-6 w-6 flex-shrink-0 text-green-600" />
+                   {/* FIX: Escaped apostrophe */}
                   <span><strong>Élargissez votre audience :</strong> Touchez les 20% de la population ayant un handicap.</span>
                 </li>
                 <li className="flex items-start">
                   <BadgeCheck className="mr-3 mt-1 h-6 w-6 flex-shrink-0 text-green-600" />
-                  <span><strong>Améliorez votre image :</strong> Montrez votre engagement pour l'inclusion et les valeurs citoyennes.</span>
+                  {/* FIX: Escaped apostrophe */}
+                  <span><strong>Améliorez votre image :</strong> Montrez votre engagement pour l&apos;inclusion et les valeurs citoyennes.</span>
                 </li>
               </ul>
             </div>
@@ -97,7 +108,8 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold">Rapport Express</h3>
                 <p className="mt-2 text-4xl font-bold">49 €</p>
                 <p className="text-slate-500">Paiement unique</p>
-                <ul className="mt-4 space-y-2 text-slate-600"><li>✓ Audit jusqu'à 5 pages</li><li>✓ Rapport PDF détaillé</li></ul>
+                 {/* FIX: Escaped apostrophe */}
+                <ul className="mt-4 space-y-2 text-slate-600"><li>✓ Audit jusqu&apos;à 5 pages</li><li>✓ Rapport PDF détaillé</li></ul>
               </div>
               <div className="rounded-lg border-2 border-blue-600 p-6 text-left">
                 <h3 className="text-xl font-bold">Abonnement Mensuel</h3>
@@ -118,7 +130,19 @@ export default function HomePage() {
 
       <footer className="border-t border-slate-200 bg-slate-100 py-8">
         <div className="container mx-auto px-4 text-center text-slate-500">
-          <p>&copy; {new Date().getFullYear()} Alouette A11Y. Tous droits réservés.</p>
+           {/*This was already fixed in the previous step, but ensuring it's correct */}
+           <p>
+              Un service de{' '}
+              <a
+                href="https://yonyalabs.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-blue-600 hover:underline"
+              >
+                yonyalabs.com
+              </a>
+            </p>
+          <p className="mt-2">&copy; {new Date().getFullYear()} Alouette A11Y. Tous droits réservés.</p>
           <p className="mt-2">
             <a href="#" className="hover:underline">Contact</a> | <a href="#" className="hover:underline">Conformité RGAA et accessibilité numérique</a>
           </p>
