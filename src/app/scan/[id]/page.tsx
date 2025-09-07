@@ -5,6 +5,7 @@ import CheckoutButton from './CheckoutButton';
 import { ShieldAlert } from 'lucide-react';
 import Header from '@/app/components/Header';
 
+
 const prisma = new PrismaClient();
 
 // Define types for our data to ensure type safety
@@ -48,8 +49,9 @@ const issueTranslations: Record<string, { title: string; fix: string }> = {
 };
 
 export default async function ScanResultPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const scan = await prisma.scan.findUnique({
-    where: { id: params.id },
+    where: { id: id },
     include: { site: true },
   });
 
@@ -112,7 +114,7 @@ export default async function ScanResultPage({ params }: { params: { id: string 
               Obtenez le rapport complet (PDF détaillé, analyse de 5 pages, preuves de conformité RGAA) pour un plan d'action clair et professionnel.
             </p>
             <div className="mt-6">
-              <CheckoutButton scanId={params.id} />
+              <CheckoutButton scanId={id} />
             </div>
           </div>
         </div>

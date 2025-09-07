@@ -14,6 +14,7 @@ type AxeIssue = {
   impact: 'minor' | 'moderate' | 'serious' | 'critical' | null;
   description: string;
   helpUrl: string;
+  html: string;
 };
 
 export async function POST(request: Request) {
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
       impact: violation.impact,
       description: violation.description,
       helpUrl: violation.helpUrl,
+      html: violation.nodes[0]?.html || 'Snippet HTML non disponible',
     }));
 
     const resultJson = { score, issues };
