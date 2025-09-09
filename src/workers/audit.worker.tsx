@@ -1,10 +1,12 @@
+// src/workers/audit.worker.tsx
+
 import { Worker } from 'bullmq';
-import { PrismaClient, Prisma } from '@prisma/client'; // Import Prisma
+import { PrismaClient, Prisma } from '@prisma/client';
 import { chromium } from 'playwright';
 import { promises as fs } from 'fs';
 import path from 'path';
 import { rgaaMap } from '../lib/rgaa-map';
-import { AxeResults, Result as AxeResult } from 'axe-core';
+import { AxeResults, Result as AxeResult, NodeResult } from 'axe-core';
 import { processViolationsWithAI } from './ai.processor';
 import { ReportProcessor } from './report.processor';
 
@@ -21,9 +23,9 @@ type MappedViolation = {
     helpUrl: string;
     html: string;
     rgaa: { rgaa: string; name: string; };
+    screenshot?: string;
 };
 
-// Define an interface for the window object with axe
 interface WindowWithAxe extends Window {
     axe: {
         run: (context: Document, options: object) => Promise<AxeResults>;
@@ -45,7 +47,8 @@ const worker = new Worker('scans', async (job) => {
 
             browser = await chromium.launch({ args: ['--no-sandbox'] });
             const context = await browser.newContext();
-            const allViolations: AxeResult[] = [];
+            
+            const allMappedViolations: MappedViolation[] = []; 
             const visited = new Set<string>();
             const toVisit = [scan.site.url];
             let pagesCrawled = 0;
@@ -64,8 +67,42 @@ const worker = new Worker('scans', async (job) => {
                     await page.goto(currentUrl, { waitUntil: 'networkidle', timeout: 60000 });
                     await page.evaluate(axeCoreScript);
                     const results: AxeResults = await page.evaluate(() => (window as unknown as WindowWithAxe).axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'best-practice'] } }));
-                    allViolations.push(...results.violations);
+                    
+                    for (const v of results.violations) {
+                        const firstNode: NodeResult | undefined = v.nodes[0];
+                        if (!firstNode) continue;
 
+                        let screenshotBase64: string | undefined = undefined;
+                        try {
+                            const selector = firstNode.target[0];
+                            const elementHandle = await page.locator(selector).first();
+
+                            // AJOUT : Forcer la visibilité de l'élément avant la capture
+                            await elementHandle.evaluate(node => {
+                                // Ces styles forcent l'élément à devenir visible
+                                node.style.visibility = 'visible';
+                                node.style.opacity = '1';
+                                // Optionnel : ajouter une bordure pour mieux le voir
+                                node.style.border = '3px solid red'; 
+                            });
+
+                            const screenshotBuffer = await elementHandle.screenshot();
+                            screenshotBase64 = screenshotBuffer.toString('base64');
+                        } catch (screenshotError) {
+                            console.warn(`Could not take screenshot for violation ${v.id} on ${currentUrl}:`, screenshotError);
+                        }
+                        
+                        allMappedViolations.push({
+                            id: v.id,
+                            impact: v.impact,
+                            description: v.description,
+                            helpUrl: v.helpUrl,
+                            html: firstNode.html || 'Snippet HTML non disponible',
+                            rgaa: rgaaMap[v.id] || { rgaa: 'N/A', name: 'Non Mappé' },
+                            screenshot: screenshotBase64,
+                        });
+                    }
+                    
                     const links: string[] = await page.$$eval('a[href]', (anchors: HTMLAnchorElement[], baseUrl: string) => 
                         anchors
                             .map(a => new URL(a.href, baseUrl).href)
@@ -80,22 +117,12 @@ const worker = new Worker('scans', async (job) => {
                     await page.close();
                 }
             }
-
-            const mappedViolations: MappedViolation[] = allViolations.map((v: AxeResult) => ({
-                id: v.id,
-                impact: v.impact,
-                description: v.description,
-                helpUrl: v.helpUrl,
-                html: v.nodes[0]?.html || 'Snippet HTML non disponible',
-                rgaa: rgaaMap[v.id] || { rgaa: 'N/A', name: 'Non Mappé' }
-            }));
             
-            console.log(`Sending ${mappedViolations.length} raw violations to Gemini for processing...`);
-            const processedReportData = await processViolationsWithAI(mappedViolations);
+            console.log(`Sending ${allMappedViolations.length} raw violations (with screenshots) to Gemini for processing...`);
+            const processedReportData = await processViolationsWithAI(allMappedViolations);
 
             await prisma.scan.update({
                 where: { id: scanId },
-                // FIX: Use Prisma.JsonValue to satisfy the type checker
                 data: { status: 'COMPLETED_FULL', resultJson: processedReportData as Prisma.JsonValue }
             });
             

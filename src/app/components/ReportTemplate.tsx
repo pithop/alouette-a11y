@@ -1,9 +1,28 @@
+// src/app/components/ReportTemplate.tsx
+
 import React from 'react';
 import { ProcessedReport } from '@/workers/ai.processor';
 
 export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results: ProcessedReport }) => {
+  // --- NOUVELLE LOGIQUE DE SCORE ---
+  // Calcule la pénalité en fonction de l'impact de chaque groupe de problèmes.
+  const penalty = results.issueGroups.reduce((acc, group) => {
+    if (group.impact === 'critical') {
+      return acc + group.count * 5; // Pénalité forte
+    }
+    if (group.impact === 'serious') {
+      return acc + group.count * 2; // Pénalité moyenne
+    }
+    if (group.impact === 'moderate') {
+      return acc + group.count * 1; // Pénalité faible
+    }
+    return acc;
+  }, 0);
+
   const totalIssues = results.issueGroups.reduce((acc, group) => acc + group.count, 0);
-  const score = Math.max(0, 100 - totalIssues * 5);
+  const score = Math.max(0, 100 - penalty); // Le score est 100 moins la pénalité totale.
+  // --- FIN DE LA NOUVELLE LOGIQUE ---
+
   const scoreColor = score >= 80 ? '#16a34a' : score >= 50 ? '#f97316' : '#dc2626';
 
   const styles = `
@@ -25,13 +44,13 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
     .meta-item { background-color: #e5e7eb; padding: 4px 12px; border-radius: 16px; font-weight: 500; }
     .footer { text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
     code { background-color: #1f2937; color: #d1d5db; padding: 12px; border-radius: 4px; display: block; white-space: pre-wrap; word-break: break-all; font-size: 13px; }
+    .screenshot { max-width: 100%; height: auto; border: 1px solid #d1d5db; border-radius: 4px; margin-top: 12px; }
   `;
 
   return (
     <html lang="fr">
       <head>
         <meta charSet="UTF-8" />
-        {/* FIX: Use template string instead of JSX interpolation in title */}
         <title>{`Rapport d'Accessibilité RGAA pour ${siteUrl}`}</title>
         <style>{styles}</style>
       </head>
@@ -54,7 +73,7 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
             <p style={{ marginTop: '24px', fontSize: '16px', color: '#4b5563' }}>{results.scoreExplanation}</p>
           </div>
           
-          <h2 className="section-title">Détail des non-conformités</h2>
+          <h2 className="section-title">Détail des non-conformités ({totalIssues} au total)</h2>
 
           {results.issueGroups.map((group, index) => (
             <div key={index} className="issue-group">
@@ -69,12 +88,20 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
               <div className="issue-content">
                 <h4>Qu&apos;est-ce que cela signifie ?</h4>
                 <p>{group.explanation}</p>
-                
                 <h4>Comment le corriger ?</h4>
                 <p>{group.howToFix}</p>
-                
                 <h4>Exemple de code concerné :</h4>
                 <code>{group.exampleHtml}</code>
+                {group.screenshot && (
+                  <>
+                    <h4>Visualisation du problème :</h4>
+                    <img
+                      className="screenshot"
+                      src={`data:image/png;base64,${group.screenshot}`}
+                      alt={`Capture d'écran pour le problème : ${group.title}`}
+                    />
+                  </>
+                )}
               </div>
             </div>
           ))}

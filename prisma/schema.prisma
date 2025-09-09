@@ -101,3 +101,32 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+model Restaurant {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  website   String?
+  email     String?
+  address   String?
+  phone     String?
+  category  String?
+
+  audits RestaurantAudit[]
+}
+
+model RestaurantAudit {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  status    String   @default("PENDING")
+  
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+
+  googleRating      Float?
+  googleReviewCount Int?
+  
+  reportJson        Json?
+
+  @@index([restaurantId])
+}
