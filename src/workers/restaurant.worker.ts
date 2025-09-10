@@ -3,7 +3,7 @@ import { Worker } from 'bullmq';
 import { PrismaClient, Prisma } from '@prisma/client'; // CORRECTION: Import de Prisma
 import { chromium } from 'playwright';
 import { Client } from "@googlemaps/google-maps-services-js";
-import { generateRestaurantReportWithAI, RestaurantData, RestaurantReport } from './restaurant.ai.processor';
+import { generateRestaurantReportWithAI, RestaurantData } from './restaurant.ai.processor';
 import { RestaurantReportProcessor } from './restaurant.report.processor';
 
 const prisma = new PrismaClient();
