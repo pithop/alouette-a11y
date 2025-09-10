@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { chromium } from 'playwright';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client'; // No need to import Prisma type here
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import type { AxeResults, Result as AxeResult } from 'axe-core';
@@ -20,7 +20,6 @@ type AxeIssue = {
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
-  // FIX: Type the request body
   const body: { url?: string } = await request.json();
   const { url } = body;
 
@@ -45,9 +44,7 @@ export async function POST(request: Request) {
 
     const site = await prisma.site.upsert({
       where: { url },
-      update: {
-        organizationId: organizationId,
-      },
+      update: {}, // No need to pass organizationId if it's not changing
       create: {
         url,
         organizationId: organizationId,
@@ -70,9 +67,7 @@ export async function POST(request: Request) {
     const axeCoreScript = await fs.readFile(axeCorePath, 'utf-8');
     await page.evaluate(axeCoreScript);
     
-    // FIX: Type the evaluated results
     const results: AxeResults = await page.evaluate(() => {
-      // FIX: Use @ts-expect-error instead of @ts-ignore
       // @ts-expect-error - axe is injected globally
       return window.axe.run(document, {
         runOnly: {
@@ -85,7 +80,6 @@ export async function POST(request: Request) {
     const violations = results.violations;
     const score = Math.max(0, 100 - violations.length * 5);
     
-    // FIX: Type the violation in the map function
     const issues: AxeIssue[] = violations.slice(0, 3).map((violation: AxeResult) => ({
       id: violation.id,
       impact: violation.impact,
@@ -96,16 +90,17 @@ export async function POST(request: Request) {
 
     const resultJson = { score, issues };
 
-    const updatedScan = await prisma.scan.update({
+    await prisma.scan.update({
       where: { id: scan.id },
-      // FIX: Cast to Prisma.JsonValue to avoid 'any'
+      // --- CORRECTION ---
+      // On retire le "as Prisma.JsonValue". Prisma infère le type correctement.
       data: {
         status: 'COMPLETED',
-        resultJson: resultJson as Prisma.JsonValue,
+        resultJson: resultJson,
       },
     });
 
-    return NextResponse.json({ scanId: updatedScan.id });
+    return NextResponse.json({ scanId: scan.id });
 
   } catch (error) {
     console.error('Scan failed:', error);
