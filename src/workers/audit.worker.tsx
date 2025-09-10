@@ -7,7 +7,7 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import { rgaaMap } from '../lib/rgaa-map';
 import { AxeResults, Result as AxeResult, NodeResult } from 'axe-core';
-import { processViolationsWithAI } from './ai.processor';
+import { processViolationsWithAI, ProcessedReport } from './ai.processor';
 import { ReportProcessor } from './report.processor';
 
 const prisma = new PrismaClient();
@@ -74,7 +74,6 @@ const worker = new Worker('scans', async (job) => {
 
                         let screenshotBase64: string | undefined = undefined;
                         try {
-                            // --- CORRECTION : On s'assure que le sélecteur est bien une chaîne de caractères ---
                             const selector = String(firstNode.target[0]);
                             const elementHandle = await page.locator(selector).first();
 
@@ -116,12 +115,13 @@ const worker = new Worker('scans', async (job) => {
                 }
             }
             
-            console.log(`Sending ${allMappedViolations.length} raw violations (with screenshots) to Gemini for processing...`);
+            console.log(`Sending ${allMappedViolations.length} raw violations (with screenshots) for processing...`);
             const processedReportData = await processViolationsWithAI(allMappedViolations);
 
             await prisma.scan.update({
                 where: { id: scanId },
-                data: { status: 'COMPLETED_FULL', resultJson: processedReportData as Prisma.JsonValue }
+                // CORRECTION : Utilisation d'un "double cast" pour forcer le type
+                data: { status: 'COMPLETED_FULL', resultJson: processedReportData as unknown as Prisma.InputJsonObject }
             });
             
             const reportProcessor = new ReportProcessor();
@@ -138,7 +138,11 @@ const worker = new Worker('scans', async (job) => {
             console.error(`--- DETAILED JOB FAILURE for scanId ${scanId} ---`);
             console.error(error); 
             if (scanId) {
-                await prisma.scan.update({ where: { id: scanId }, data: { status: 'FAILED', resultJson: { error: message } as Prisma.JsonValue } });
+                await prisma.scan.update({ 
+                    where: { id: scanId }, 
+                    // CORRECTION : Utilisation d'un "double cast" ici aussi
+                    data: { status: 'FAILED', resultJson: { error: message } as unknown as Prisma.InputJsonObject } 
+                });
             }
         } finally {
             if (browser) await browser.close();

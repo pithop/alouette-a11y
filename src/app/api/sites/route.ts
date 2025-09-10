@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth'; // CORRECTION : Import depuis le fichier partagé
 import { scanQueue } from '@/lib/queue';
 import { Stripe } from 'stripe';
 
@@ -50,12 +50,12 @@ export async function POST(request: Request) {
 
     // Schedule the repeatable job in BullMQ
     const repeatOptions = plan === 'pro' 
-      ? { pattern: '0 0 * * 1' } // Every Monday at midnight for Pro
-      : { every: 30 * 24 * 60 * 60 * 1000 }; // Roughly every 30 days for Basic
+      ? { pattern: '0 0 * * 1' } // Tous les lundis à minuit pour le plan Pro
+      : { every: 30 * 24 * 60 * 60 * 1000 }; // Environ tous les 30 jours pour le plan Basique
     
     await scanQueue.add('scheduled-scan', { siteId: site.id }, {
       repeat: repeatOptions,
-      jobId: `scan-${site.id}` // Unique job ID to prevent duplicates
+      jobId: `scan-${site.id}` // ID unique pour éviter les doublons
     });
 
     return NextResponse.json({ url: checkoutSession.url });

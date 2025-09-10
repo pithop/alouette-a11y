@@ -1,22 +1,13 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
-import Providers from "./providers"; // 1. Import the Providers component
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import Providers from "./providers";
 
 export const metadata: Metadata = {
-  title: "Alouette A11Y",
-  description: "Instant RGAA accessibility audits for French websites.",
+  title: "Alouette A11Y & Gourmet-Presence",
+  description: "Audits d'accessibilité et de présence en ligne.",
 };
 
 export default function RootLayout({
@@ -25,11 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {/* 2. Wrap your children with the Providers component */}
+    <html lang="fr" className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <body>
         <Providers>{children}</Providers>
       </body>
     </html>

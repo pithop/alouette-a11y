@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 import { chromium } from 'playwright';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { PrismaClient } from '@prisma/client'; // No need to import Prisma type here
+import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth'; // CORRECTION : Importe depuis le nouveau fichier
 import type { AxeResults, Result as AxeResult } from 'axe-core';
 
 const prisma = new PrismaClient();
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     const site = await prisma.site.upsert({
       where: { url },
-      update: {}, // No need to pass organizationId if it's not changing
+      update: {},
       create: {
         url,
         organizationId: organizationId,
@@ -92,8 +92,6 @@ export async function POST(request: Request) {
 
     await prisma.scan.update({
       where: { id: scan.id },
-      // --- CORRECTION ---
-      // On retire le "as Prisma.JsonValue". Prisma infère le type correctement.
       data: {
         status: 'COMPLETED',
         resultJson: resultJson,

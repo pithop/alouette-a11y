@@ -1,8 +1,8 @@
 // src/workers/restaurant.worker.ts
 import { Worker } from 'bullmq';
-import { PrismaClient, Prisma } from '@prisma/client'; // CORRECTION: Import de Prisma
+import { PrismaClient, Prisma } from '@prisma/client';
 import { chromium } from 'playwright';
-import { Client } from "@googlemaps/google-maps-services-js";
+import { Client, PlaceInputType, Language } from "@googlemaps/google-maps-services-js";
 import { generateRestaurantReportWithAI, RestaurantData } from './restaurant.ai.processor';
 import { RestaurantReportProcessor } from './restaurant.report.processor';
 
@@ -26,7 +26,12 @@ const worker = new Worker('restaurant-audits', async (job) => {
         
         console.log(`[${restaurant.name}] Fetching Google Places data...`);
         const findPlaceRequest = await googleMapsClient.findPlaceFromText({
-            params: { input: `${restaurant.name} ${restaurant.address || 'Paris'}`, inputtype: 'textquery', fields: ['place_id'], key: process.env.GOOGLE_PLACES_API_KEY! },
+            params: { 
+                input: `${restaurant.name} ${restaurant.address || 'Paris'}`, 
+                inputtype: PlaceInputType.textQuery, 
+                fields: ['place_id'], 
+                key: process.env.GOOGLE_PLACES_API_KEY! 
+            },
         });
 
         if (findPlaceRequest.data.status !== 'OK' && findPlaceRequest.data.status !== 'ZERO_RESULTS') {
@@ -40,7 +45,7 @@ const worker = new Worker('restaurant-audits', async (job) => {
                 params: {
                     place_id: placeId,
                     fields: ['name', 'rating', 'user_ratings_total', 'formatted_address', 'website', 'reviews'],
-                    language: 'fr',
+                    language: Language.fr, 
                     key: process.env.GOOGLE_PLACES_API_KEY!,
                 },
             });
@@ -99,8 +104,7 @@ const worker = new Worker('restaurant-audits', async (job) => {
                 status: 'COMPLETED', 
                 googleRating: collectedData.googleData.rating, 
                 googleReviewCount: collectedData.googleData.reviewCount,
-                // CORRECTION: Utilisation du type Prisma.JsonValue au lieu de 'any'
-                reportJson: reportJson as Prisma.JsonValue,
+                reportJson: reportJson as unknown as Prisma.InputJsonObject,
             },
         });
 
@@ -109,10 +113,8 @@ const worker = new Worker('restaurant-audits', async (job) => {
     } catch (error) {
         let errorMessage = 'An unknown error occurred';
         
-        // CORRECTION: Vérification de type plus sûre sans utiliser 'any'
         if (error instanceof Error) {
             errorMessage = error.message;
-            // Vérifie si l'erreur ressemble à une erreur Axios de Google
             if (typeof error === 'object' && error !== null && 'response' in error) {
                 const response = (error as { response?: { data?: { error_message?: string } } }).response;
                 if (response?.data?.error_message) {
@@ -122,7 +124,13 @@ const worker = new Worker('restaurant-audits', async (job) => {
         }
         
         console.error(`❌ Failed to process audit for ${restaurant.name}: ${errorMessage}`);
-        await prisma.restaurantAudit.update({ where: { id: auditId }, data: { status: 'FAILED' } });
+        await prisma.restaurantAudit.update({ 
+            where: { id: auditId }, 
+            data: { 
+                status: 'FAILED',
+                reportJson: { error: errorMessage } as unknown as Prisma.InputJsonObject
+            } 
+        });
     }
 }, { connection, concurrency: 1 });
 

@@ -28,8 +28,6 @@ export async function POST(request: Request) {
   let event: Stripe.Event;
 
   try {
-    // --- CORRECTION : Ajout de "!" pour rassurer TypeScript ---
-    // On garantit que signature et webhookSecret ne sont pas nuls ici.
     event = stripe.webhooks.constructEvent(body, signature!, webhookSecret!);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';

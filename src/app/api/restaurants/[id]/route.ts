@@ -4,12 +4,11 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// CORRECTION FINALE : On type 'params' comme étant une promesse
 export async function PATCH(
   req: NextRequest, 
-  context: { params: Promise<{ id: string }> }
+  context: { params: { id: string } }
 ) {
-  const { id } = await context.params; // On utilise 'await' pour résoudre la promesse
+  const { id } = context.params;
   const data = await req.json();
 
   try {
