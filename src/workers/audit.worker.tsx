@@ -74,15 +74,13 @@ const worker = new Worker('scans', async (job) => {
 
                         let screenshotBase64: string | undefined = undefined;
                         try {
-                            const selector = firstNode.target[0];
+                            // --- CORRECTION : On s'assure que le sélecteur est bien une chaîne de caractères ---
+                            const selector = String(firstNode.target[0]);
                             const elementHandle = await page.locator(selector).first();
 
-                            // AJOUT : Forcer la visibilité de l'élément avant la capture
                             await elementHandle.evaluate(node => {
-                                // Ces styles forcent l'élément à devenir visible
                                 node.style.visibility = 'visible';
                                 node.style.opacity = '1';
-                                // Optionnel : ajouter une bordure pour mieux le voir
                                 node.style.border = '3px solid red'; 
                             });
 
@@ -127,8 +125,10 @@ const worker = new Worker('scans', async (job) => {
             });
             
             const reportProcessor = new ReportProcessor();
-            const pdfBuffer = await reportProcessor.generate(scan.site.url, processedReportData);
-            await reportProcessor.sendEmail(scan.userEmail, scan.site.url, processedReportData, pdfBuffer);
+            if (scan.site && scan.userEmail && processedReportData) {
+                const pdfBuffer = await reportProcessor.generate(scan.site.url, processedReportData);
+                await reportProcessor.sendEmail(scan.userEmail, scan.site.url, processedReportData, pdfBuffer);
+            }
 
             await prisma.scan.update({ where: { id: scanId }, data: { status: 'DELIVERED' } });
             console.log(`Successfully processed and delivered report for scanId: ${scanId}`);
@@ -138,7 +138,7 @@ const worker = new Worker('scans', async (job) => {
             console.error(`--- DETAILED JOB FAILURE for scanId ${scanId} ---`);
             console.error(error); 
             if (scanId) {
-                await prisma.scan.update({ where: { id: scanId }, data: { status: 'FAILED', resultJson: { error: message } } });
+                await prisma.scan.update({ where: { id: scanId }, data: { status: 'FAILED', resultJson: { error: message } as Prisma.JsonValue } });
             }
         } finally {
             if (browser) await browser.close();
