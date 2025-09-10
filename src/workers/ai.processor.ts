@@ -37,15 +37,12 @@ export async function processViolationsWithAI(violations: MappedViolation[]): Pr
     if (v.screenshot && v.html) {
       screenshotMap.set(v.html, v.screenshot);
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { screenshot, ...rest } = v;
     return rest;
   });
 
-  // --- MODEL UPDATED ---
-  // Switched to Gemini Flash 1.5 from your list.
-  // It has a very large context window, solving the size limit error.
   const modelToUse = "google/gemini-flash-1.5";
-  // ---------------------
 
   const systemPrompt = `
     Tu es un expert en accessibilité web (RGAA/WCAG) qui rédige des rapports pour des non-techniciens (mairies, PME).

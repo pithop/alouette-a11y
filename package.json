@@ -6,10 +6,12 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint",
+    "lint": "next lint",
     "worker": "tsx watch src/workers/audit.worker.tsx",
     "worker:restaurants": "tsx watch src/workers/restaurant.worker.ts",
-    "outreach": "tsx scripts/send-prospect-audits.ts"
+    "build:workers": "tsc src/workers/audit.worker.ts src/workers/restaurant.worker.ts src/workers/ai.processor.ts src/workers/restaurant.ai.processor.ts src/workers/restaurant.report.processor.ts --outDir dist/workers --resolveJsonModule true --esModuleInterop true --module NodeNext --moduleResolution NodeNext",
+    "start:worker:audit": "node dist/workers/audit.worker.js",
+    "start:worker:restaurants": "node dist/workers/restaurant.worker.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -48,6 +50,6 @@
     "tailwindcss": "^4",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.20.5",
-    "typescript": "^5"
+    "typescript": "^5.9.2"
   }
 }

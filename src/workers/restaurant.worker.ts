@@ -41,15 +41,17 @@ const worker = new Worker('restaurant-audits', async (job) => {
                 },
             });
             const details = detailsRequest.data.result;
-            collectedData.googleData = { 
-                name: details.name, 
-                rating: details.rating, 
-                reviewCount: details.user_ratings_total,
-                address: details.formatted_address,
-                reviews: details.reviews?.map(r => r.text).filter(Boolean) as string[]
-            };
-            if (!restaurant.website && details.website) {
-                collectedData.websiteData.url = details.website;
+            if (details) {
+                collectedData.googleData = { 
+                    name: details.name, 
+                    rating: details.rating, 
+                    reviewCount: details.user_ratings_total,
+                    address: details.formatted_address,
+                    reviews: details.reviews?.map(r => r.text).filter(Boolean) as string[]
+                };
+                if (!restaurant.website && details.website) {
+                    collectedData.websiteData.url = details.website;
+                }
             }
         }
         
@@ -84,7 +86,7 @@ const worker = new Worker('restaurant-audits', async (job) => {
         if(restaurant.email) {
           await processor.sendEmail(restaurant.email, restaurant.name, reportJson, pdfBuffer);
         } else {
-          console.warn(`[${restaurant.name}] No email found, skipping send.`);
+          console.warn(`[${restaurant.name}] No email found in database, skipping email send.`);
         }
         
         await prisma.restaurantAudit.update({
@@ -93,7 +95,6 @@ const worker = new Worker('restaurant-audits', async (job) => {
                 status: 'COMPLETED', 
                 googleRating: collectedData.googleData.rating, 
                 googleReviewCount: collectedData.googleData.reviewCount,
-                // CORRECTION : Typage correct pour le JSON
                 reportJson: reportJson as Prisma.JsonValue,
             },
         });

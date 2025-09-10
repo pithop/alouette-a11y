@@ -4,25 +4,21 @@ import React from 'react';
 import { ProcessedReport } from '@/workers/ai.processor';
 
 export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results: ProcessedReport }) => {
-  // --- NOUVELLE LOGIQUE DE SCORE ---
-  // Calcule la pénalité en fonction de l'impact de chaque groupe de problèmes.
   const penalty = results.issueGroups.reduce((acc, group) => {
     if (group.impact === 'critical') {
-      return acc + group.count * 5; // Pénalité forte
+      return acc + group.count * 5;
     }
     if (group.impact === 'serious') {
-      return acc + group.count * 2; // Pénalité moyenne
+      return acc + group.count * 2;
     }
     if (group.impact === 'moderate') {
-      return acc + group.count * 1; // Pénalité faible
+      return acc + group.count * 1;
     }
     return acc;
   }, 0);
 
   const totalIssues = results.issueGroups.reduce((acc, group) => acc + group.count, 0);
-  const score = Math.max(0, 100 - penalty); // Le score est 100 moins la pénalité totale.
-  // --- FIN DE LA NOUVELLE LOGIQUE ---
-
+  const score = Math.max(0, 100 - penalty);
   const scoreColor = score >= 80 ? '#16a34a' : score >= 50 ? '#f97316' : '#dc2626';
 
   const styles = `
@@ -57,7 +53,7 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
       <body>
         <div className="container">
           <div className="header">
-            <h1>Rapport d'Audit d'Accessibilité RGAA</h1>
+            <h1>Rapport d&apos;Audit d&apos;Accessibilité RGAA</h1>
             <p style={{ marginTop: '8px', color: '#6b7280' }}>Pour le site : <a href={siteUrl} style={{ color: '#3b82f6' }}>{siteUrl}</a></p>
             <p style={{ fontSize: '14px', color: '#6b7280' }}>Généré le : {new Date().toLocaleDateString('fr-FR')}</p>
           </div>
@@ -86,7 +82,6 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
                 </div>
               </div>
               <div className="issue-content">
-                {/* CORRECTION : Utilisation de &apos; pour les apostrophes */}
                 <h4>Qu&apos;est-ce que cela signifie ?</h4>
                 <p>{group.explanation}</p>
 
@@ -99,7 +94,6 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
                 {group.screenshot && (
                   <>
                     <h4>Visualisation du problème :</h4>
-                    {/* CORRECTION : Désactivation de l'avertissement pour la balise img */}
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       className="screenshot"
