@@ -18,7 +18,10 @@ const stripe = new Stripe(stripeSecretKey);
 
 export async function POST(request: Request) {
   const body = await request.text();
-  const signature = headers().get('stripe-signature');
+  
+  // --- CORRECTION : On utilise "await" pour récupérer les headers ---
+  const headerList = await headers();
+  const signature = headerList.get('stripe-signature');
 
   if (!signature) {
     return NextResponse.json({ error: 'Missing Stripe signature' }, { status: 400 });
@@ -28,7 +31,7 @@ export async function POST(request: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-  } catch (err) { // FIX: Type the error
+  } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     console.error(`Webhook signature verification failed: ${message}`);
     return NextResponse.json({ error: 'Webhook Error' }, { status: 400 });
