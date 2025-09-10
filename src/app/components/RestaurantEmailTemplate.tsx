@@ -5,7 +5,7 @@ import { RestaurantReport } from '@/workers/restaurant.ai.processor';
 
 interface EmailProps {
   restaurantName: string;
-  report: RestaurantReport;
+  report: RestaurantReport; // Maintenant utilisé
 }
 
 export const RestaurantEmailTemplate = ({ restaurantName, report }: EmailProps) => (
@@ -14,7 +14,8 @@ export const RestaurantEmailTemplate = ({ restaurantName, report }: EmailProps) 
       <Heading as="h1" style={{color: '#1e3a8a'}}>Votre réputation en ligne est excellente...</Heading>
       <Text style={{color: '#333', fontSize: '16px'}}>Bonjour,</Text>
       <Text style={{color: '#333', fontSize: '16px'}}>
-        En analysant la présence en ligne de <strong>{restaurantName}</strong>, nous avons été impressionnés par votre excellente réputation, mise en évidence dans le rapport ci-joint. 🎉
+        {/* CORRECTION : Données dynamiques du rapport utilisées ici */}
+        En analysant la présence en ligne de <strong>{restaurantName}</strong>, nous avons remarqué que vous bénéficiez d’une excellente réputation avec une note de <strong>{report.googlePresence.rating} ★</strong> sur plus de <strong>{report.googlePresence.reviewCount}</strong> avis. 🎉
       </Text>
       <Text style={{color: '#333', fontSize: '16px'}}>
         Cependant, notre analyse montre que votre image dépend aujourd’hui principalement de plateformes tierces. Cela vous prive :

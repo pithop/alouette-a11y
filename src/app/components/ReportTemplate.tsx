@@ -64,15 +64,15 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
           <div className="summary">
             <div className="score-card">
               <p style={{ margin: 0, textTransform: 'uppercase', fontSize: '14px', color: '#4b5563' }}>Score Global</p>
-              <p className="score">{score}<span style={{fontSize: '40px'}}>/100</span></p>
+              <p className="score">{score}<span style={{ fontSize: '40px' }}>/100</span></p>
             </div>
             <div className="executive-summary">
-              <h3 style={{marginTop: 0, color: '#1e3a8a'}}>Résumé Principal</h3>
-              <p style={{margin: 0}}>{results.executiveSummary}</p>
+              <h3 style={{ marginTop: 0, color: '#1e3a8a' }}>Résumé Principal</h3>
+              <p style={{ margin: 0 }}>{results.executiveSummary}</p>
             </div>
             <p style={{ marginTop: '24px', fontSize: '16px', color: '#4b5563' }}>{results.scoreExplanation}</p>
           </div>
-          
+
           <h2 className="section-title">Détail des non-conformités ({totalIssues} au total)</h2>
 
           {results.issueGroups.map((group, index) => (
@@ -86,15 +86,21 @@ export const ReportTemplate = ({ siteUrl, results }: { siteUrl: string; results:
                 </div>
               </div>
               <div className="issue-content">
+                {/* CORRECTION : Utilisation de &apos; pour les apostrophes */}
                 <h4>Qu&apos;est-ce que cela signifie ?</h4>
                 <p>{group.explanation}</p>
+
                 <h4>Comment le corriger ?</h4>
                 <p>{group.howToFix}</p>
+
                 <h4>Exemple de code concerné :</h4>
                 <code>{group.exampleHtml}</code>
+
                 {group.screenshot && (
                   <>
                     <h4>Visualisation du problème :</h4>
+                    {/* CORRECTION : Désactivation de l'avertissement pour la balise img */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       className="screenshot"
                       src={`data:image/png;base64,${group.screenshot}`}

@@ -1,9 +1,9 @@
 // src/workers/restaurant.worker.ts
 import { Worker } from 'bullmq';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { chromium } from 'playwright';
 import { Client } from "@googlemaps/google-maps-services-js";
-import { generateRestaurantReportWithAI, RestaurantData, RestaurantReport } from './restaurant.ai.processor';
+import { generateRestaurantReportWithAI, RestaurantData } from './restaurant.ai.processor';
 import { RestaurantReportProcessor } from './restaurant.report.processor';
 
 const prisma = new PrismaClient();
@@ -89,7 +89,13 @@ const worker = new Worker('restaurant-audits', async (job) => {
         
         await prisma.restaurantAudit.update({
             where: { id: auditId },
-            data: { status: 'COMPLETED', googleRating: collectedData.googleData.rating, googleReviewCount: collectedData.googleData.reviewCount, reportJson: reportJson as any },
+            data: { 
+                status: 'COMPLETED', 
+                googleRating: collectedData.googleData.rating, 
+                googleReviewCount: collectedData.googleData.reviewCount,
+                // CORRECTION : Typage correct pour le JSON
+                reportJson: reportJson as Prisma.JsonValue,
+            },
         });
 
         console.log(`✅ Successfully processed and sent audit for ${restaurant.name}`);

@@ -1,8 +1,9 @@
 // src/app/api/restaurants/route.ts
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Restaurant } from '@prisma/client';
 
 const prisma = new PrismaClient();
+type RestaurantInput = Omit<Restaurant, 'id' | 'createdAt'>;
 
 // Fonction pour LIRE tous les restaurants
 export async function GET() {
@@ -15,15 +16,14 @@ export async function GET() {
 // Fonction pour AJOUTER une liste de restaurants
 export async function POST(req: Request) {
   try {
-    const restaurantsData = await req.json(); // Ceci est une LISTE de restaurants
-
-    // Le .filter est CORRECT ici
-    const validRestaurants = restaurantsData.filter((r: any) => r && r.name);
+    const restaurantsData: RestaurantInput[] = await req.json();
+    const validRestaurants = restaurantsData.filter((r) => r && r.name);
 
     if (validRestaurants.length === 0) {
       return NextResponse.json({ message: 'No valid restaurants to add' }, { status: 400 });
     }
-
+    
+    // Prisma createMany attend des données qui correspondent au modèle
     await prisma.restaurant.createMany({
       data: validRestaurants,
       skipDuplicates: true,

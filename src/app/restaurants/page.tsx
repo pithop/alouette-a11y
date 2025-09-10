@@ -2,11 +2,13 @@
 
 import { useState, useEffect, useCallback, ChangeEvent, DragEvent } from 'react';
 import Papa from 'papaparse';
-import { UploadCloud, FileCheck, Loader, CheckCircle, XCircle, Wand2, RefreshCw } from 'lucide-react';
+import { UploadCloud, FileCheck, Loader, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
 type Restaurant = { id: string; name: string; website: string | null; email: string | null; address: string | null; phone: string | null; category: string | null; status: 'Nouveau' | 'En attente' | 'En cours...' | 'Terminé' | 'Erreur' };
 
-// API pour mettre à jour un restaurant
+// Ce type indique à TypeScript à quoi ressemble une ligne de notre CSV
+type CsvRow = { [key: string]: string };
+
 async function updateRestaurant(id: string, data: Partial<Restaurant>) {
   const response = await fetch(`/api/restaurants/${id}`, {
     method: 'PATCH',
@@ -26,7 +28,8 @@ export default function RestaurantsPage() {
     try {
       const response = await fetch('/api/restaurants');
       const data = await response.json();
-      const processedData = data.map((r: any) => ({ ...r, status: 'Nouveau' }));
+      // CORRECTION : On utilise le type 'Restaurant' au lieu de 'any'
+      const processedData = data.map((r: Restaurant) => ({ ...r, status: 'Nouveau' as const }));
       setRestaurants(processedData);
     } catch (error) {
       console.error("Failed to fetch restaurants:", error);
@@ -40,7 +43,7 @@ export default function RestaurantsPage() {
     fetchRestaurants();
   }, [fetchRestaurants]);
 
-  const getColumnValue = (row: any, keys: string[]): string | null => {
+  const getColumnValue = (row: CsvRow, keys: string[]): string | null => {
     for (const key of keys) { if (row[key]) return row[key]; }
     return null;
   };
@@ -48,10 +51,12 @@ export default function RestaurantsPage() {
   const handleFile = (file: File) => {
     if (!file) return;
     setIsLoading(true);
-    Papa.parse(file, {
+    // CORRECTION : On spécifie le type <CsvRow> à Papa.parse
+    Papa.parse<CsvRow>(file, {
       header: true, skipEmptyLines: true,
       complete: async (results) => {
-        const newRestaurants = results.data.map((row: any) => {
+        // TypeScript sait maintenant que 'row' est de type CsvRow, l'erreur disparaît
+        const newRestaurants = results.data.map((row) => {
           const name = getColumnValue(row, ['name', 'place_name', 'Titre', 'Nom']);
           if (!name) return null;
           return { name, website: getColumnValue(row, ['website', 'Site Web']), email: getColumnValue(row, ['email', 'E-mail']), address: getColumnValue(row, ['address', 'Adresse']), phone: getColumnValue(row, ['phone', 'Numéro de téléphone']), category: getColumnValue(row, ['main_category', 'categories', 'Catégorie'])};
@@ -66,6 +71,7 @@ export default function RestaurantsPage() {
           await fetchRestaurants(); 
         } else {
           setIsLoading(false);
+          alert("Aucun restaurant valide n'a été trouvé. Vérifiez que votre fichier CSV contient bien une colonne pour le nom (ex: 'name' ou 'Titre').");
         }
       }
     });
@@ -77,6 +83,7 @@ export default function RestaurantsPage() {
     try {
       await updateRestaurant(id, { email: newEmail });
     } catch (error) {
+      console.error("Failed to save email:", error);
       alert("Erreur lors de la sauvegarde de l'email.");
       setRestaurants(originalRestaurants);
     }
@@ -150,7 +157,6 @@ export default function RestaurantsPage() {
   );
 }
 
-// Le composant pour afficher les statuts visuels
 const StatusBadge = ({ status }: { status: 'Nouveau' | 'En attente' | 'En cours...' | 'Terminé' | 'Erreur' }) => {
   const styles = {
     Nouveau: 'bg-gray-100 text-gray-700',
